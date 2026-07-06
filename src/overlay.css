@@ -1,0 +1,113 @@
+/* src/overlay.css — SADA subtitle overlay. All selectors .sada- prefixed and
+   written to survive YouTube's own player styles (explicit resets, high z-index,
+   pointer-events:none so we never eat clicks on the video or controls). */
+
+.sada-overlay {
+  position: absolute;
+  inset: 0;
+  /* Above the caption/control layers but below native menus/tooltips. */
+  z-index: 60;
+  pointer-events: none;
+  /* Legibility variable, set from settings.fontSize (px) by overlay.js. */
+  --sada-size: 28px;
+  direction: ltr;
+  overflow: hidden;
+}
+
+.sada-overlay.sada-hidden {
+  display: none;
+}
+
+/* --- Subtitle stack: centered, ~10% up from the bottom, never on the scrubber. --- */
+.sada-cuebox {
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 90%;
+  margin: 0;
+  padding: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12em;
+  text-align: center;
+  pointer-events: none;
+}
+
+.sada-cuebox.sada-on {
+  display: flex;
+}
+
+.sada-line {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  line-height: 1.28;
+  /* Broadcast-style legibility with NO box — pure text-shadow. */
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.95), 0 2px 3px rgba(0, 0, 0, 0.9);
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Arabic line: RTL, Arabic-native font stack, semibold, sized by the var. */
+.sada-ar {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  font-family: "SF Arabic", "Geeza Pro", "Noto Naskh Arabic", serif;
+  font-weight: 600;
+  font-size: var(--sada-size);
+  color: #ffffff;
+}
+
+/* English line is hidden unless dual mode is on; when shown it sits above the
+   Arabic (source order puts it first), smaller and dimmer. */
+.sada-en {
+  display: none;
+  direction: ltr;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 500;
+  font-size: calc(var(--sada-size) * 0.72);
+  color: rgba(255, 255, 255, 0.75);
+  opacity: 1;
+}
+
+.sada-overlay.sada-dual .sada-en {
+  display: block;
+}
+
+/* --- Status pill: small, unobtrusive, top-center of the player. --- */
+.sada-pill {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(14, 17, 22, 0.72);
+  color: #ece6d8;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.sada-pill[hidden] {
+  display: none;
+}
+
+.sada-pill[data-state="translating"] {
+  color: #54c7b0;   /* calm teal = translating locally */
+}
+
+.sada-pill[data-state="error"] {
+  color: #e0a94e;   /* warm amber for the soft error state */
+}

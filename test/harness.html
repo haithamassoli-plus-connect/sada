@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sada overlay harness</title>
+  <!-- Load the real overlay styles so RTL + legibility match production. -->
+  <link rel="stylesheet" href="../src/overlay.css" />
+  <style>
+    :root {
+      --ink: #0E1116; --surface: #161B22; --line: #242B36;
+      --parchment: #ECE6D8; --muted: #8B93A0; --accent: #E0A94E; --live: #54C7B0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px; background: var(--ink); color: var(--parchment);
+      font-family: system-ui, sans-serif; line-height: 1.5;
+    }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    h1 .ar { font-family: "SF Arabic","Geeza Pro","Noto Naskh Arabic",serif; color: var(--accent); }
+    p.note { color: var(--muted); font-size: 13px; margin: 0 0 20px; max-width: 60ch; }
+    .stage { max-width: 900px; margin: 0 auto; }
+
+    /* Stand-in for YouTube's player. overlay.js anchors into .html5-video-player,
+       so the overlay survives fullscreen in the real product; here it just gives
+       the overlay a positioned box to live inside. */
+    .html5-video-player {
+      position: relative; width: 100%; aspect-ratio: 16 / 9;
+      background:
+        radial-gradient(120% 120% at 50% 30%, #2a3340 0%, #10151c 70%),
+        var(--surface);
+      border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+    }
+    .fake-video {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      color: #3a4655; font-size: 13px; letter-spacing: .3em; text-transform: uppercase;
+    }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 16px; }
+    .controls button, .controls .chip {
+      background: var(--surface); color: var(--parchment); border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 14px; cursor: pointer;
+    }
+    .controls button:hover { border-color: var(--accent); }
+    .controls button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .chip { cursor: default; color: var(--muted); }
+    .chip b { color: var(--parchment); }
+    input[type=range] { flex: 1 1 240px; accent-color: var(--live); }
+    label.inline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+    .group { display: flex; gap: 8px; align-items: center; }
+    .states { margin-top: 12px; }
+    .states button { font-size: 13px; }
+    .clock { font-variant-numeric: tabular-nums; color: var(--live); min-width: 88px; text-align: right; }
+
+    .sentences { margin-top: 22px; }
+    .sentences summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+    .sentences ol { margin: 8px 0 0; padding-left: 20px; font-size: 13px; color: var(--muted); }
+    .sentences code { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <h1><span class="ar">صدى</span> · sada — overlay harness</h1>
+    <p class="note">
+      No extension, no model — this page drives the real <code>src/overlay.js</code> over a fake
+      player using hand-written Arabic cues, so overlay rendering, timeline sync, RTL styling and
+      the status pill can be verified visually. Open via a static server or directly with
+      <code>file://</code>.
+    </p>
+
+    <div class="html5-video-player" id="player">
+      <div class="fake-video" id="video">mock player · no &lt;video&gt;</div>
+    </div>
+
+    <div class="controls">
+      <div class="group">
+        <button id="playpause" aria-label="Play or pause">▶ Play</button>
+        <span class="clock" id="clock">0.0 / 0.0s</span>
+      </div>
+      <input type="range" id="seek" min="0" max="100" step="0.05" value="0" aria-label="Seek" />
+    </div>
+
+    <div class="controls">
+      <label class="inline">
+        <input type="checkbox" id="english" /> Show English too
+      </label>
+      <div class="group" role="group" aria-label="Font size">
+        <button id="fontdown" aria-label="Decrease font size">A−</button>
+        <span class="chip">font <b id="fontval">28</b>px</span>
+        <button id="fontup" aria-label="Increase font size">A+</button>
+      </div>
+    </div>
+
+    <div class="controls states" role="group" aria-label="Status pill states">
+      <span class="chip">pill:</span>
+      <button data-state="loading">loading</button>
+      <button data-state="translating">translating</button>
+      <button data-state="no-captions">no-captions</button>
+      <button data-state="error">error</button>
+      <button data-state="">hide</button>
+    </div>
+
+    <details class="sentences">
+      <summary>Reassembled sentences (src/reassemble.js)</summary>
+      <ol id="sentences"></ol>
+    </details>
+  </div>
+
+  <script type="module">
+    import { SubtitleOverlay } from '../src/overlay.js';
+    import { toSentences } from '../src/reassemble.js';
+    // Loaded as a JSON module so this works over file:// (a fetch() of a
+    // file:// URL is blocked by Chrome; module import of a sibling file is not).
+    import cues from './cues.sample.json' with { type: 'json' };
+
+    const player = document.getElementById('player');
+    const video = document.getElementById('video');
+    // overlay.js reads video.currentTime and anchors into .html5-video-player.
+    // A plain property is all the rAF sync loop needs.
+    video.currentTime = 0;
+    const duration = Math.max(...cues.map((c) => c.start + c.dur));
+
+    const overlay = new SubtitleOverlay(video);
+    let fontSize = 28;
+    overlay.setOptions({ fontSize, showEnglish: false, visible: true });
+    overlay.setCues(cues);
+
+    // --- simulated timeline -------------------------------------------------
+    const seek = document.getElementById('seek');
+    const clock = document.getElementById('clock');
+    const playBtn = document.getElementById('playpause');
+    seek.max = duration.toFixed(2);
+    let playing = false;
+    let last = 0;
+
+    function paintClock() {
+      clock.textContent = `${video.currentTime.toFixed(1)} / ${duration.toFixed(1)}s`;
+      seek.value = video.currentTime.toFixed(2);
+    }
+    function loop(now) {
+      if (playing) {
+        video.currentTime = Math.min(duration, video.currentTime + (now - last) / 1000);
+        if (video.currentTime >= duration) { playing = false; playBtn.textContent = '▶ Play'; }
+        paintClock();
+      }
+      last = now;
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame((t) => { last = t; requestAnimationFrame(loop); });
+
+    playBtn.addEventListener('click', () => {
+      playing = !playing;
+      if (video.currentTime >= duration) video.currentTime = 0;
+      playBtn.textContent = playing ? '❚❚ Pause' : '▶ Play';
+    });
+    seek.addEventListener('input', () => {
+      video.currentTime = parseFloat(seek.value);
+      paintClock();
+    });
+
+    // --- options ------------------------------------------------------------
+    document.getElementById('english').addEventListener('change', (e) => {
+      overlay.setOptions({ showEnglish: e.target.checked });
+    });
+    const fontval = document.getElementById('fontval');
+    function setFont(px) {
+      fontSize = Math.max(14, Math.min(64, px));
+      fontval.textContent = fontSize;
+      overlay.setOptions({ fontSize });
+    }
+    document.getElementById('fontup').addEventListener('click', () => setFont(fontSize + 2));
+    document.getElementById('fontdown').addEventListener('click', () => setFont(fontSize - 2));
+
+    // --- status pill demo ---------------------------------------------------
+    for (const btn of document.querySelectorAll('.states button')) {
+      btn.addEventListener('click', () => overlay.showState(btn.dataset.state || null));
+    }
+
+    // --- reassembly readout (exercises src/reassemble.js) -------------------
+    const ol = document.getElementById('sentences');
+    for (const s of toSentences(cues)) {
+      const li = document.createElement('li');
+      li.innerHTML = `${s.text} <code>[${s.cueIdx.join(', ')}]</code>`;
+      ol.appendChild(li);
+    }
+
+    paintClock();
+  </script>
+</body>
+</html>

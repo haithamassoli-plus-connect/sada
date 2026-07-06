@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sada</title>
+  <link rel="icon" type="image/png" href="../icons/icon32.png">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="sada-popup">
+    <header class="sada-head">
+      <div class="sada-wordmark">
+        <span class="sada-ar" lang="ar" dir="rtl">صدى</span>
+        <span class="sada-mid" aria-hidden="true">·</span>
+        <span class="sada-latin">sada</span>
+      </div>
+      <p class="sada-status" id="sada-status" aria-live="polite">On · translating on your device</p>
+    </header>
+
+    <section class="sada-signature">
+      <button type="button" id="sada-toggle" class="sada-echo" role="switch" aria-checked="true"
+              aria-labelledby="sada-echo-label sada-echo-hint">
+        <span class="sada-rings" aria-hidden="true">
+          <span class="sada-ring"></span>
+          <span class="sada-ring"></span>
+          <span class="sada-ring"></span>
+          <span class="sada-core"></span>
+        </span>
+      </button>
+      <p class="sada-echo-label" id="sada-echo-label">On</p>
+      <p class="sada-echo-hint" id="sada-echo-hint">Arabic subtitles</p>
+    </section>
+
+    <section class="sada-controls">
+      <div class="sada-row">
+        <span class="sada-row-label" id="sada-size-label">Subtitle size</span>
+        <div class="sada-stepper" role="group" aria-labelledby="sada-size-label">
+          <button type="button" id="sada-font-dec" class="sada-step" aria-label="Smaller subtitles">A−</button>
+          <span class="sada-font-val" id="sada-font-val" aria-live="polite">28px</span>
+          <button type="button" id="sada-font-inc" class="sada-step" aria-label="Larger subtitles">A+</button>
+        </div>
+      </div>
+
+      <div class="sada-row">
+        <span class="sada-row-label" id="sada-english-label">Show English too</span>
+        <button type="button" id="sada-english" class="sada-switch" role="switch" aria-checked="false"
+                aria-labelledby="sada-english-label">
+          <span class="sada-switch-track" aria-hidden="true"><span class="sada-switch-thumb"></span></span>
+        </button>
+      </div>
+    </section>
+
+    <footer class="sada-foot">
+      <svg class="sada-glyph" viewBox="0 0 24 24" width="20" height="20" fill="none"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M7 18h9a4 4 0 0 0 .6-7.96A5.5 5.5 0 0 0 6.2 8.1 3.9 3.9 0 0 0 6 15.9"></path>
+        <line x1="4" y1="3" x2="20" y2="21"></line>
+      </svg>
+      <p class="sada-thesis">Translated on your device.<br>Nothing is ever sent to a server.</p>
+    </footer>
+  </main>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+[
+  { "start": 0.0,  "dur": 3.2, "text": "Hello everyone, and welcome back to the channel.", "ar": "مرحبًا بالجميع، وأهلًا بعودتكم إلى القناة." },
+  { "start": 3.2,  "dur": 3.0, "text": "Today we are going to build something really cool.", "ar": "اليوم سنبني شيئًا رائعًا حقًا." },
+  { "start": 6.2,  "dur": 4.1, "text": "But first, let me quickly explain how it works.", "ar": "لكن أولًا، دعوني أشرح بسرعة كيف يعمل." },
+  { "start": 10.3, "dur": 3.4, "text": "The whole idea runs entirely on your own device.", "ar": "الفكرة بأكملها تعمل بالكامل على جهازك الخاص." },
+  { "start": 13.7, "dur": 2.6, "text": "Nothing you watch is ever sent to a server.", "ar": "لا يُرسَل أي شيء تشاهده إلى أي خادم." },
+  { "start": 16.3, "dur": 3.8, "text": "So your privacy stays completely in your hands.", "ar": "لذا تبقى خصوصيتك بين يديك تمامًا." },
+  { "start": 20.1, "dur": 3.1, "text": "Let's take a look at the first example on screen.", "ar": "لنلقِ نظرة على المثال الأول على الشاشة." },
+  { "start": 23.2, "dur": 4.4, "text": "Notice how the Arabic text reads from right to left.", "ar": "لاحظوا كيف يُقرأ النص العربي من اليمين إلى اليسار." },
+  { "start": 27.6, "dur": 2.9, "text": "The timing follows the video exactly.", "ar": "يتزامن التوقيت مع الفيديو تمامًا." },
+  { "start": 30.5, "dur": 3.6, "text": "You can make the subtitles larger whenever you need.", "ar": "يمكنكم تكبير الترجمة كلما احتجتم إلى ذلك." },
+  { "start": 34.1, "dur": 3.3, "text": "And you can show the English line at the same time.", "ar": "ويمكنكم عرض السطر الإنجليزي في الوقت نفسه." },
+  { "start": 37.4, "dur": 4.0, "text": "Thanks for watching, and I'll see you in the next one.", "ar": "شكرًا لمشاهدتكم، وأراكم في الفيديو القادم." }
+]

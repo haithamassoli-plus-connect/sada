@@ -1,0 +1,10 @@
+node_modules/
+vendor/transformers/
+models/
+*.zip
+stage/
+.DS_Store
+# Claude Code tooling / third-party skill cache — not part of the extension
+.agents/
+.vtest/
+skills-lock.json

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <title>sada — صدى: Arabic subtitles, echoed on your device</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B222C"/>
+      <stop offset="1" stop-color="#0B0E13"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EBC272"/>
+      <stop offset="1" stop-color="#D49735"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#54C7B0" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#54C7B0" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="badge"><rect width="128" height="128" rx="28"/></clipPath>
+  </defs>
+
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <g clip-path="url(#badge)">
+    <circle cx="64" cy="94" r="70" fill="url(#glow)"/>
+  </g>
+
+  <!-- echo ripples (صدى) fading upward from the caption -->
+  <g fill="none" stroke="#54C7B0" stroke-width="9" stroke-linecap="round">
+    <path d="M45 92A19 19 0 0 1 83 92"/>
+    <path d="M30 92A34 34 0 0 1 98 92" opacity="0.60"/>
+    <path d="M15 92A49 49 0 0 1 113 92" opacity="0.32"/>
+  </g>
+
+  <!-- the caption bar -->
+  <rect x="36" y="85.5" width="56" height="13" rx="6.5" fill="url(#bar)"/>
+
+  <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="27.4" fill="none" stroke="#3A4553" stroke-opacity="0.5" stroke-width="1.5"/>
+</svg>
