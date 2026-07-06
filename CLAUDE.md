@@ -5,8 +5,8 @@ videos, translating captions 100% on-device. See `docs/prd-local-youtube-arabic-
 
 ## Skills to use
 
-- **transformers-js** — the translation engine. WebGPU/WASM inference with
-  `Xenova/opus-mt-en-ar` (EN→AR). Baseline, browser-independent, bundled.
+- **transformers-js** — the translation engine. WebGPU (fp16) inference with
+  `Xenova/nllb-200-distilled-600M` (EN→AR, `eng_Latn`→`arb_Arab`). Bundled; WebGPU-only build.
 - **chrome-extensions** — MV3 shell: service worker, content scripts, permissions.
 
 ## Module boundaries (keep swappable)

@@ -70,7 +70,7 @@ A desktop browser extension that renders Arabic subtitles over English YouTube v
 **Translation engine — two paths, fallback-first (the key call):**
 
 - **Primary (lightest):** the browser's built-in **on-device Translator API** (Chrome 138+ / Edge 148+). Free, local. Must feature-detect the `en→ar` pair via `Translator.availability()`. Edge guarantees Arabic (145+ languages); Chrome ships ~37 and needs verification. First use downloads a language pack (~1–2 GB).
-- **Baseline (portable, browser-independent):** **transformers.js Opus-MT** (`Xenova/opus-mt-en-ar`) via WebGPU, bundled with the extension. Fully on-device, works regardless of browser, you control it end-to-end. On Apple Silicon + WebGPU it's fast enough for batch cue translation.
+- **Baseline (portable):** **transformers.js NLLB-200** (`Xenova/nllb-200-distilled-600M`, fp16) via WebGPU, bundled with the extension. Fully on-device, higher Arabic quality than Opus-MT, you control it end-to-end. WebGPU-only build (no WASM fallback); on Apple Silicon + WebGPU it's fast enough for batch cue translation.
 
 > **Recommendation:** build the bundled transformers.js engine as the *baseline* so "local" never depends on a single browser's capability, and use the built-in API as a faster path *when available*. This is what makes the "ship later" story viable.
 

@@ -5,7 +5,7 @@
 **sada** (صدى, "echo") renders Arabic subtitles over English YouTube videos.
 It translates the video's own captions into Arabic **100% on your device** — a
 Manifest V3 Chromium extension with a bundled [transformers.js](https://github.com/huggingface/transformers.js)
-Opus-MT model (`Xenova/opus-mt-en-ar`). No account, no cloud translation service.
+NLLB-200 model (`Xenova/nllb-200-distilled-600M`). No account, no cloud translation service.
 
 ## The privacy guarantee
 
@@ -26,7 +26,7 @@ See `PRIVACY.md` for the plain-language statement.
 Requires **Node 18+** and a Chromium browser (Chrome/Edge/Brave).
 
 ```bash
-# 1. Download the model + library once (~hundreds of MB; goes into vendor/ + models/).
+# 1. Download the model + library once (~1.8 GB; goes into vendor/ + models/).
 node scripts/fetch-assets.mjs
 ```
 
@@ -62,7 +62,7 @@ sada is built around three independent seams:
 | Module | Files | Job |
 |--------|-------|-----|
 | **caption-fetch** | `src/yt-hook.js`, `src/caption-fetch.js` | Read the running player's caption track and fetch English cues as `{ start, dur, text }`. Fails gracefully to `no-captions` / `blocked` / `error`. |
-| **translate-engine** | `offscreen.html`, `src/offscreen.js`, `src/translate-engine.js` | Turn English strings into Arabic, on-device, in an offscreen document (WebGPU/fp32 → WASM/q8 fallback, or the built-in Translator API when available). |
+| **translate-engine** | `offscreen.html`, `src/offscreen.js`, `src/translate-engine.js` | Turn English strings into Arabic, on-device, in an offscreen document (WebGPU/fp16 NLLB-200, or the built-in Translator API when available — no WASM fallback). |
 | **overlay-render** | `src/overlay.js`, `src/overlay.css` | Paint synced, RTL Arabic (optionally dual) over the player; small status pill; survives fullscreen. |
 
 `src/content.js` orchestrates the three; `src/sw.js` owns the single offscreen

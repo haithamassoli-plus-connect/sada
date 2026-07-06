@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // scripts/fetch-assets.mjs — install-time only (Node 18+). Downloads the
 // transformers.js library + ONNX Runtime WASM into vendor/transformers/ and the
-// Xenova/opus-mt-en-ar model into models/Xenova/opus-mt-en-ar/.
+// Xenova/nllb-200-distilled-600M model into models/Xenova/nllb-200-distilled-600M/.
 //
 // Naming-agnostic on purpose: file names are discovered from the jsDelivr and
 // Hugging Face APIs rather than hardcoded, so an ORT/name bump doesn't silently
@@ -18,21 +18,20 @@ import { pipeline } from 'node:stream/promises';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const VENDOR_DIR = join(ROOT, 'vendor', 'transformers');
-const MODEL_DIR = join(ROOT, 'models', 'Xenova', 'opus-mt-en-ar');
+const MODEL_DIR = join(ROOT, 'models', 'Xenova', 'nllb-200-distilled-600M');
 
 // Pin transformers so the resolved ORT (a dev build that can be yanked) stays
 // reproducible. ORT itself is read from transformers' package.json below.
 // ponytail: pinned to 3.7.5, NOT latest 4.x. Verified in-browser: 4.x ships a broken
 // dev onnxruntime-web (QDQ TransposeDQWeightsForMatMulNBits crash on the tied embedding)
-// AND a browser tokenizer-loader regression. 3.7.5 loads webgpu-fp32 + wasm-q8 correctly.
+// AND a browser tokenizer-loader regression. Stay on 3.7.5; this build loads NLLB fp16 on the WebGPU path.
 const TF = '3.7.5';
-const HF_MODEL = 'Xenova/opus-mt-en-ar';
+const HF_MODEL = 'Xenova/nllb-200-distilled-600M';
 
-// Only the 4 ONNX files the engine actually loads: encoder + merged decoder at
-// the two dtypes it uses (fp32 for WebGPU, q8 '_quantized' for the WASM path).
+// Only the 2 ONNX files the engine actually loads: encoder + merged decoder at q8
+// ('_quantized'). WASM/q8 is the only path that runs NLLB correctly in-browser — WebGPU
+// OOMs at fp16, crashes on the 4-bit op, and emits garbage at q8 (all verified in-browser).
 const WANT_ONNX = new Set([
-  'onnx/encoder_model.onnx',
-  'onnx/decoder_model_merged.onnx',
   'onnx/encoder_model_quantized.onnx',
   'onnx/decoder_model_merged_quantized.onnx',
 ]);
@@ -104,7 +103,7 @@ async function fetchLibrary() {
   }
 }
 
-// B) MODEL -> models/Xenova/opus-mt-en-ar/
+// B) MODEL -> models/Xenova/nllb-200-distilled-600M/
 async function fetchModel() {
   console.log(`\n[2/2] model ${HF_MODEL} -> models/${HF_MODEL}/`);
 
@@ -116,10 +115,11 @@ async function fetchModel() {
     `https://huggingface.co/${HF_MODEL}/resolve/main/${rfilename}`;
   const dest = (rfilename) => join(MODEL_DIR, ...rfilename.split('/'));
 
-  // Root config/tokenizer/spm: every root-level file that isn't under onnx/.
+  // Root config/tokenizer files: every root-level file that isn't under onnx/.
+  // NLLB ships tokenizer.json (used by transformers.js) + sentencepiece.bpe.model.
   const rootFiles = files.filter((f) => !f.includes('/'));
   for (const f of rootFiles) {
-    if (/\.(json|spm|txt)$/.test(f)) await download(resolve(f), dest(f));
+    if (/\.(json|spm|txt|model)$/.test(f)) await download(resolve(f), dest(f));
   }
 
   // ONNX subset — assert each wanted file exists so a repo rename fails loudly
