@@ -72,6 +72,25 @@ export async function getEnglishCues(playerResponse) {
   }
 }
 
+// Local caption companion. Ask the service worker to fetch English cues from the
+// user's own youtube-transcript-api backend (see backend/server.py). This sidesteps
+// YouTube's pot/&exp=xpe gating because the transcript is fetched from the user's
+// real IP, not the in-page timedtext endpoint. Still 100% on-device: the only thing
+// leaving the browser is the videoId, and only to the user's own localhost process;
+// translation stays in the extension. Returns a normal cues result, or null when the
+// backend isn't running (caller then falls back to the in-page track).
+export async function getBackendCues(videoId) {
+  try {
+    const res = await chrome.runtime.sendMessage({ type: 'sada-cues', videoId });
+    if (res && Array.isArray(res.cues) && res.cues.length > 0) {
+      return { cues: res.cues, trackName: 'local backend' };
+    }
+  } catch {
+    // no receiver / messaging error -> fall back to the in-page path
+  }
+  return null;
+}
+
 // --- Self-check (Node only) --------------------------------------------------
 // Run: `node src/caption-fetch.js`. Proves json3 parsing yields correct Cue
 // timings and drops control/blank events. Never executes in the browser

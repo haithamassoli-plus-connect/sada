@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Watch English YouTube with Arabic subtitles, translated privately on your own device.",
   "permissions": ["storage", "offscreen"],
-  "host_permissions": ["*://*.youtube.com/*"],
+  "host_permissions": ["*://*.youtube.com/*", "http://127.0.0.1/*", "http://localhost/*"],
   "background": {
     "service_worker": "src/sw.js",
     "type": "module"

@@ -3,7 +3,7 @@
 // caption-fetch, translates cache-first + incrementally through the offscreen
 // engine (relayed by sw.js), and drives the overlay. Fails gracefully.
 
-import { getEnglishCues } from './caption-fetch.js';
+import { getEnglishCues, getBackendCues } from './caption-fetch.js';
 import { SubtitleOverlay } from './overlay.js';
 import { getSettings, onSettingsChanged } from './settings.js';
 import { toSentences, splitToCues } from './reassemble.js';
@@ -123,16 +123,24 @@ async function init() {
   overlay.showState('loading');
 
   try {
-    // Ask the MAIN-world hook to (re)post the current playerResponse — covers the
-    // case where its initial post fired before this listener was attached. The hook
-    // also polls the global on cold load, so one of the two wins the race.
-    window.postMessage({ source: 'sada-request-pr' }, '*');
-    const pr = await waitFor(sess, () => (prVideoId(latestPR) === videoId ? latestPR : null), 10000);
+    // Prefer the local backend (youtube-transcript-api): it fetches captions from the
+    // user's own IP, sidestepping YouTube's pot-gated in-page timedtext. Falls back to
+    // the in-page playerResponse track when the backend isn't running.
+    let result = await getBackendCues(videoId);
     if (sess.cancelled) return;
-    if (!pr) return; // stay on the loading pill
 
-    const result = await getEnglishCues(pr);
-    if (sess.cancelled) return;
+    if (!result) {
+      // Ask the MAIN-world hook to (re)post the current playerResponse — covers the
+      // case where its initial post fired before this listener was attached. The hook
+      // also polls the global on cold load, so one of the two wins the race.
+      window.postMessage({ source: 'sada-request-pr' }, '*');
+      const pr = await waitFor(sess, () => (prVideoId(latestPR) === videoId ? latestPR : null), 10000);
+      if (sess.cancelled) return;
+      if (!pr) return; // stay on the loading pill
+
+      result = await getEnglishCues(pr);
+      if (sess.cancelled) return;
+    }
 
     if (!result.cues || result.cues.length === 0) {
       // 'blocked' (pot/exp-gated 200-empty) reads as no-captions to the user;

@@ -40,3 +40,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   })();
   return true; // keep the channel open for the async reply
 });
+
+// Local caption companion: fetch English transcript cues from the user's own
+// youtube-transcript-api backend, bypassing YouTube's pot-gated in-page timedtext.
+// Done here in the SW so host_permissions cover the cross-origin localhost fetch —
+// a content-script fetch would hit CORS/mixed-content/private-network friction.
+const SADA_BACKEND = 'http://127.0.0.1:8787';
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.type !== 'sada-cues') return;
+  (async () => {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000); // don't let a wedged backend stall boot
+      const res = await fetch(`${SADA_BACKEND}/cues?v=${encodeURIComponent(msg.videoId)}`, {
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      sendResponse(res.ok ? await res.json() : { cues: [], reason: 'error' });
+    } catch {
+      // backend not running / timed out -> caller falls back to the in-page path
+      sendResponse({ cues: [], reason: 'offline' });
+    }
+  })();
+  return true; // async response
+});
