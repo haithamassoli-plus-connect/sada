@@ -23,7 +23,7 @@ let _backend = null;      // 'wasm' | 'webgpu' (native Translator) | null
 let _ready = false;
 let _native = false;      // M3 built-in on-device Translator fast path in use
 let _booting = null;      // shared boot promise (dedupe concurrent callers)
-let _bootFailed = false;  // WebGPU load failed once — no fallback, so don't re-attempt per chunk
+let _bootFailed = false;  // boot failed once — don't re-attempt a doomed model load per chunk
 
 async function boot() {
   if (_translator || _native || _bootFailed) return;

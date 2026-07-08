@@ -10,7 +10,7 @@ Derived from [docs/prd-local-youtube-arabic-subtitles.md](docs/prd-local-youtube
 
 Milestones **0–3 built and verified**; **M4 deferred** (per PRD, out of core v1). Verification done without sideloading (the automated browser can't load an unpacked MV3 extension), so each piece was exercised directly:
 
-> **Update — translation model swapped Opus-MT → NLLB-200-distilled-600M** (fp16, WebGPU-only; the WASM q8 fallback was dropped). NLLB wiring (`eng_Latn`→`arb_Arab`) verified; the WebGPU inference re-check in a real Chrome is the pending manual step. The Opus-MT notes below are kept as historical record.
+> **Update — translation model swapped Opus-MT → NLLB-200-distilled-600M** (q8 on **WASM/CPU**). NLLB does NOT run on ORT-web WebGPU at any dtype (fp16 OOM, 4-bit broken op, int8 garbage — all verified in a real Chrome via CDP), so it runs on WASM: correct Arabic, ~1.4s/line single-thread, one line at a time (mixed-length batches run past EOS). **Full pipeline verified end-to-end in Chrome for Testing** (backend cues → SW → offscreen → engine → Arabic). The Opus-MT notes below are historical.
 
 - **translate-engine** — the *shipped* `src/translate-engine.js` was imported in a real browser and produced correct Arabic on **WebGPU** (e.g. _"The whole idea runs entirely on your own device."_ → **الفكرة بأكملها تعمل بالكامل على جهازك الخاص**). Also proven in Node against the bundled local weights. `env.allowRemoteModels=false` → zero third-party calls.
 - **overlay-render** — driven live in `test/harness.html`: RTL Arabic, timeline sync, dual EN+AR, font sizing, status pill. Screenshotted.
@@ -18,7 +18,7 @@ Milestones **0–3 built and verified**; **M4 deferred** (per PRD, out of core v
 - **caption-fetch / reassemble** — runnable `node` self-checks pass.
 - **locality + MV3 correctness** — two adversarial agent reviews; verdict _"valid MV3 build, correctly wired, and TRULY LOCAL."_
 
-> ⚠️ **Library pinned to transformers.js 3.7.5, NOT latest 4.x.** In-browser testing found 4.x ships a broken dev `onnxruntime-web` (QDQ `TransposeDQWeightsForMatMulNBits` crash on the tied embedding) **and** a browser tokenizer-loader regression. Stay on 3.7.5 (this build loads NLLB fp16 on WebGPU). Documented in `scripts/fetch-assets.mjs`.
+> ⚠️ **Library pinned to transformers.js 3.7.5, NOT latest 4.x.** In-browser testing found 4.x ships a broken dev `onnxruntime-web` (QDQ `TransposeDQWeightsForMatMulNBits` crash on the tied embedding) **and** a browser tokenizer-loader regression. Stay on 3.7.5 (this build runs NLLB q8 on WASM). Documented in `scripts/fetch-assets.mjs`.
 
 **One manual step remains (needs a human at a real Chrome):** `chrome://extensions` → Load unpacked → open a captioned English video → confirm subtitles + watch the **Network** tab shows zero third-party translation calls during a full watch. Everything upstream of that is verified.
 
@@ -52,9 +52,9 @@ Milestones **0–3 built and verified**; **M4 deferred** (per PRD, out of core v
 - [x] Fail gracefully on empty/blocked (PO-token/`exp=xpe` 200-empty) → `no-captions`/`blocked`/`error`, never a crash.
 
 ### translate-engine
-- [x] Bundle transformers.js NLLB-200 (`Xenova/nllb-200-distilled-600M`, fp16 WebGPU); `env.allowRemoteModels=false`, local weights via `getURL`. _(fetched once at install by `scripts/fetch-assets.mjs`.)_
-- [x] Run inference on **WebGPU; confirmed it initializes on Apple Silicon** (backend `webgpu`, correct Arabic). WebGPU-only build — no WASM fallback (fp16 can't run on ORT-Web's WASM backend).
-- [x] Translate cues EN→AR **one line at a time** (chunked ~24 cues at the content-script level so the active line lands fast). NLLB runs past EOS in a mixed-length batch (`decoder_start`==`eos`==2) → repeated/wrong-language garbage, so per-line. Verified clean on the shipped fp16 weights.
+- [x] Bundle transformers.js NLLB-200 (`Xenova/nllb-200-distilled-600M`, q8 WASM); `env.allowRemoteModels=false`, local weights via `getURL`. _(fetched once at install by `scripts/fetch-assets.mjs`.)_
+- [x] Run inference on **WASM/q8** (backend `wasm`, correct Arabic) — verified end-to-end in Chrome for Testing via CDP. NLLB doesn't run on ORT-web WebGPU at any dtype (verified: fp16 OOM abort, 4-bit `MatMulNBits` crash, int8 garbage output).
+- [x] Translate cues EN→AR **one line at a time** (chunked ~24 cues at the content-script level so the active line lands fast). NLLB runs past EOS in a mixed-length batch (`decoder_start`==`eos`==2) → repeated/wrong-language garbage, so per-line. Verified clean on the shipped q8 weights.
 - [x] Single swappable interface: `translateTexts(texts) → string[]` behind an offscreen message boundary. _(texts-based, not `translateCues`; `reassemble.js` maps sentences↔cues — same swappability.)_
 
 ### overlay-render

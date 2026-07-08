@@ -24,7 +24,7 @@ const MODEL_DIR = join(ROOT, 'models', 'Xenova', 'nllb-200-distilled-600M');
 // reproducible. ORT itself is read from transformers' package.json below.
 // ponytail: pinned to 3.7.5, NOT latest 4.x. Verified in-browser: 4.x ships a broken
 // dev onnxruntime-web (QDQ TransposeDQWeightsForMatMulNBits crash on the tied embedding)
-// AND a browser tokenizer-loader regression. Stay on 3.7.5; this build loads NLLB fp16 on the WebGPU path.
+// AND a browser tokenizer-loader regression. Stay on 3.7.5; this build runs NLLB q8 on WASM (WebGPU can't).
 const TF = '3.7.5';
 const HF_MODEL = 'Xenova/nllb-200-distilled-600M';
 
